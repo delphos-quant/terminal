@@ -1,0 +1,10 @@
+version: '3.10'
+services:
+  dash:
+    build: .
+    ports:
+      - "8050:8050"
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"

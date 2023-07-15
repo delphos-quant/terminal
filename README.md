@@ -15,21 +15,33 @@ This interactive terminal and dashboard application is designed to provide a com
 
 * **Data Export and Integration**: Export your research findings, simulation results, and visualizations in various formats, including CSV, Excel, or PDF. Seamlessly integrate the tool's capabilities into your existing workflows and reporting systems.
 
-### Installation and Usage
-1. Clone the repository and install the necessary dependencies.
-2. Run the application and access the interactive terminal.
-3. Connect to your preferred financial data sources or import custom datasets.
-4. Utilize the command-line interface to explore data, conduct research, and run simulations.
-5. Visualize your findings and run simulations in the dashboard.
-6. Export data, reports, and visualizations as needed.
-
 
 ### Requirements
+
+#### For the project itself:
+
 * Python 3.x
 * Internet connection for real-time data retrieval
 * Financial data provider API keys (if using external source)
+
+#### For the Docker container instance:
+
+* Docker installed. If you haven't installed Docker, you can get it from https://www.docker.com/get-started
+* Docker Compose installed. If you haven't installed Docker Compose, you can get it from https://docs.docker.com/compose/install/
+
+**Instructions for running the container:**
+1. Clone this repository:\
+``git clone https://github.com/delphos-quant/terminal.git`` \
+``cd terminal``
+
+2. Run the Docker Compose:\
+``docker-compose up --build``
+3. ow, your Dash app should be accessible at http://localhost:8050 from your web browser. 
+Redis will also be running in another container and can be accessed via redis:6379.
+
 
 ### Contributions and Feedback
 Contributions, bug reports, and feature requests are welcome! If you encounter any issues or have suggestions for improvements, please feel free to open an issue or submit a pull request on the GitHub repository.
 
 We hope this financial data research and simulation tool enhances your decision-making process and helps you achieve your financial goals. Happy analyzing and simulating!
+
