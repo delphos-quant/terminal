@@ -1,15 +1,16 @@
 import dash
-import plotly.graph_objects as go
 from dash import dcc, html, dash_table
-from dash.dependencies import Input, Output, State, MATCH
+from dash.dependencies import Input, Output, MATCH
 from dash.exceptions import PreventUpdate
 
 from plotly import express
 
 import pandas
+import numpy
 from datetime import datetime, timedelta
 
 app = dash.Dash(__name__)
+
 
 def function_1(_):
     return html.Div([
@@ -19,13 +20,16 @@ def function_1(_):
         html.Div(id={'type': 'dynamic-output', 'index': 'vol-mensal'})
     ])
 
+
 def function_2(value):
     return value ** 3
 
-def function_3(value): 
+
+def function_3(value):
     return value ** (value ** value)
 
-def function_4(value): 
+
+def function_4(_):
     return dash_table.DataTable(
         id='table',
         columns=[
@@ -34,10 +38,12 @@ def function_4(value):
             {"name": "AveragePriceYesterday", "id": "AveragePriceYesterday"},
             {"name": "AveragePriceBeforeYesterday", "id": "AveragePriceBeforeYesterday"},
         ],
-        data = [
-            {"Stock": "GOOG", "PriceNow": "1500", "AveragePriceYesterday": "1490", "AveragePriceBeforeYesterday": "1485"},
+        data=[
+            {"Stock": "GOOG", "PriceNow": "1500", "AveragePriceYesterday": "1490",
+             "AveragePriceBeforeYesterday": "1485"},
             {"Stock": "AAPL", "PriceNow": "200", "AveragePriceYesterday": "195", "AveragePriceBeforeYesterday": "190"},
-            {"Stock": "AMZN", "PriceNow": "3100", "AveragePriceYesterday": "3080", "AveragePriceBeforeYesterday": "3060"},
+            {"Stock": "AMZN", "PriceNow": "3100", "AveragePriceYesterday": "3080",
+             "AveragePriceBeforeYesterday": "3060"},
             {"Stock": "MSFT", "PriceNow": "250", "AveragePriceYesterday": "245", "AveragePriceBeforeYesterday": "240"},
         ],
         style_cell_conditional=[
@@ -52,22 +58,28 @@ def function_4(value):
         ]
     )
 
-def function_5(value): 
-    children = []
-    reshaped_data = {
-        "GOOG": ["1500", "1490", "1485"],
-        "AAPL": ["200", "195", "190"],
-        "AMZN": ["3100", "3080", "3060"],
-        "MSFT": ["250", "245", "240"],
-    }
 
-    # creating a DataFrame
-    df = pandas.DataFrame(reshaped_data)
+@app.callback(
+    Output({'type': 'dynamic-graph', 'index': "generated-graph"}, 'children'),
+    [Input({'type': 'dynamic-k', 'index': "k-field"}, 'value')]
+)
+def graph(k):
+    if not k or k < 1:
+        return
+    df = pandas.DataFrame(
+        {
+            "GOOG": numpy.random.rand(k) * 100,
+            "AAPL": numpy.random.rand(k) * 2000,
+            "AMZN": numpy.random.rand(k) * 200,
+            "MSFT": numpy.random.rand(k) * 10,
+        }
+    )
 
-    # changing the index to dates
-    df.index = [datetime.now() - timedelta(days=2), datetime.now() - timedelta(days=1), datetime.now()]
+    df.index = [datetime.now() - timedelta(days=x) for x in range(k, 0, -1)]
     df.index.name = 'Date'
-    
+
+    df = df / df.iloc[0] * 100
+
     fig = express.line(df.astype(float), x=df.index, y=df.columns)
 
     fig.update_layout(
@@ -78,38 +90,28 @@ def function_5(value):
 
     return dcc.Graph(figure=fig)
 
-    # for row in data:
-    #     fig_individual = go.Figure()
-    #     fig_individual.add_trace(go.Scatter(x=['Before Yesterday', 'Yesterday', 'Now'], 
-    #         y=[row['AveragePriceBeforeYesterday'], row['AveragePriceYesterday'], row['PriceNow']],
-    #         mode='lines+markers',
-    #         name=row['Stock']))
-    #     fig_individual.update_layout(
-    #         title=row['Stock'] + " Stock Price",
-    #         xaxis_title="Time",
-    #         yaxis_title="Price",
-    #     )
-    #     children.append(dcc.Graph(figure=fig_individual))
-    #     fig.add_trace(go.Scatter(x=['Before Yesterday', 'Yesterday', 'Now'], 
-    #         y=[row['AveragePriceBeforeYesterday'], row['AveragePriceYesterday'], row['PriceNow']],
-    #         mode='lines+markers',
-    #         name=row['Stock']))
-    #     fig.update_layout(
-    #         title="Stock Price Comparison",
-    #         xaxis_title="Time",
-    #         yaxis_title="Price",
-    #     )
-    #     children.append(html.H3('Comparison Chart'))
-    #     children.append(dcc.Graph(figure=fig))
-    # return children
-    
+
+def function_5(_):
+    return html.Div(
+        children=[
+            dcc.Input(
+                id={'type': 'dynamic-k', 'index': "k-field"},
+                placeholder="Insert a value for K",
+                style={"width": "300px"},
+                type="number",
+                value=40,
+            ),
+            html.Div(id={'type': 'dynamic-graph', 'index': "generated-graph"})
+        ]
+    )
+
 
 function_map = {
     "function_1": function_1,
     "function_2": function_2,
-    "function_3": function_3, 
-    "function_4": function_4, 
-    "function_5": function_5, 
+    "function_3": function_3,
+    "function_4": function_4,
+    "function_5": function_5,
 }
 
 buttons = [
@@ -119,7 +121,6 @@ buttons = [
     {"label": "Acoes Tab", "id": "function_4"},
     {"label": "Acoes Graphic", "id": "function_5"},
 ]
-
 
 app.layout = html.Div(
     [
@@ -144,15 +145,14 @@ def update_search_results(search_term):
     if not search_term:
         return html.P(f"Search Term: {search_term}")
 
-    
-    filtered_options = [option for option in buttons if all(word.lower() in option["label"].lower() for word in search_term.split())]
-
-
+    filtered_options = [option for option in buttons if
+                        all(word.lower() in option["label"].lower() for word in search_term.split())]
 
     return html.Div(
         [
             html.P(f"Search Term: {search_term}"),
-            html.Div([html.Button(button['label'], id={'type': 'dynamic-button', 'index': button['id']}, n_clicks=0) for button in filtered_options]),
+            html.Div([html.Button(button['label'], id={'type': 'dynamic-button', 'index': button['id']}, n_clicks=0) for
+                      button in filtered_options]),
             html.Div([html.Div(id={'type': 'dynamic-output', 'index': button['id']}) for button in filtered_options])
         ]
     )
@@ -166,8 +166,8 @@ def update_output(n_clicks):
     if n_clicks is None or n_clicks <= 0:
         raise PreventUpdate
     else:
-        id = dash.callback_context.triggered[0]['prop_id'].split('.')[0]
-        button_id = eval(id)['index']
+        button_id = dash.callback_context.triggered[0]['prop_id'].split('.')[0]
+        button_id = eval(button_id)['index']
         function_to_execute = function_map[button_id]
         return function_to_execute(n_clicks)
 
