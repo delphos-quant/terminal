@@ -1,7 +1,13 @@
 import dash
-from dash import dcc, html
+import plotly.graph_objects as go
+from dash import dcc, html, dash_table
 from dash.dependencies import Input, Output, State, MATCH
 from dash.exceptions import PreventUpdate
+
+from plotly import express
+
+import pandas
+from datetime import datetime, timedelta
 
 app = dash.Dash(__name__)
 
@@ -19,16 +25,99 @@ def function_2(value):
 def function_3(value): 
     return value ** (value ** value)
 
+def function_4(value): 
+    return dash_table.DataTable(
+        id='table',
+        columns=[
+            {"name": "Stock", "id": "Stock"},
+            {"name": "PriceNow", "id": "PriceNow"},
+            {"name": "AveragePriceYesterday", "id": "AveragePriceYesterday"},
+            {"name": "AveragePriceBeforeYesterday", "id": "AveragePriceBeforeYesterday"},
+        ],
+        data = [
+            {"Stock": "GOOG", "PriceNow": "1500", "AveragePriceYesterday": "1490", "AveragePriceBeforeYesterday": "1485"},
+            {"Stock": "AAPL", "PriceNow": "200", "AveragePriceYesterday": "195", "AveragePriceBeforeYesterday": "190"},
+            {"Stock": "AMZN", "PriceNow": "3100", "AveragePriceYesterday": "3080", "AveragePriceBeforeYesterday": "3060"},
+            {"Stock": "MSFT", "PriceNow": "250", "AveragePriceYesterday": "245", "AveragePriceBeforeYesterday": "240"},
+        ],
+        style_cell_conditional=[
+            {'if': {'column_id': 'Stock'},
+             'textAlign': 'center'},
+            {'if': {'column_id': 'PriceNow'},
+             'textAlign': 'center'},
+            {'if': {'column_id': 'AveragePriceYesterday'},
+             'textAlign': 'center'},
+            {'if': {'column_id': 'AveragePriceBeforeYesterday'},
+             'textAlign': 'center'}
+        ]
+    )
+
+def function_5(value): 
+    children = []
+    reshaped_data = {
+        "GOOG": ["1500", "1490", "1485"],
+        "AAPL": ["200", "195", "190"],
+        "AMZN": ["3100", "3080", "3060"],
+        "MSFT": ["250", "245", "240"],
+    }
+
+    # creating a DataFrame
+    df = pandas.DataFrame(reshaped_data)
+
+    # changing the index to dates
+    df.index = [datetime.now() - timedelta(days=2), datetime.now() - timedelta(days=1), datetime.now()]
+    df.index.name = 'Date'
+    
+    fig = express.line(df.astype(float), x=df.index, y=df.columns)
+
+    fig.update_layout(
+        title="Stock Price Comparison",
+        xaxis_title="Time",
+        yaxis_title="Price",
+    )
+
+    return dcc.Graph(figure=fig)
+
+    # for row in data:
+    #     fig_individual = go.Figure()
+    #     fig_individual.add_trace(go.Scatter(x=['Before Yesterday', 'Yesterday', 'Now'], 
+    #         y=[row['AveragePriceBeforeYesterday'], row['AveragePriceYesterday'], row['PriceNow']],
+    #         mode='lines+markers',
+    #         name=row['Stock']))
+    #     fig_individual.update_layout(
+    #         title=row['Stock'] + " Stock Price",
+    #         xaxis_title="Time",
+    #         yaxis_title="Price",
+    #     )
+    #     children.append(dcc.Graph(figure=fig_individual))
+    #     fig.add_trace(go.Scatter(x=['Before Yesterday', 'Yesterday', 'Now'], 
+    #         y=[row['AveragePriceBeforeYesterday'], row['AveragePriceYesterday'], row['PriceNow']],
+    #         mode='lines+markers',
+    #         name=row['Stock']))
+    #     fig.update_layout(
+    #         title="Stock Price Comparison",
+    #         xaxis_title="Time",
+    #         yaxis_title="Price",
+    #     )
+    #     children.append(html.H3('Comparison Chart'))
+    #     children.append(dcc.Graph(figure=fig))
+    # return children
+    
+
 function_map = {
     "function_1": function_1,
     "function_2": function_2,
     "function_3": function_3, 
+    "function_4": function_4, 
+    "function_5": function_5, 
 }
 
 buttons = [
     {"label": "Acoes Petrobras", "id": "function_1"},
     {"label": "Acoes Petrobras Iradas", "id": "function_2"},
     {"label": "Acoes", "id": "function_3"},
+    {"label": "Acoes Tab", "id": "function_4"},
+    {"label": "Acoes Graphic", "id": "function_5"},
 ]
 
 
