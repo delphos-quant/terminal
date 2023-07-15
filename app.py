@@ -5,7 +5,7 @@ from dash.exceptions import PreventUpdate
 
 app = dash.Dash(__name__)
 
-def function_1(value):
+def function_1(_):
     return html.Div([
         html.H3("Sopa de Macaco"),
         html.Button("Volatilidade mensal"),
