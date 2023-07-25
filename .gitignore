@@ -2,6 +2,6 @@
 .idea
 venv
 
-.csv
+*.csv
 
 cache/
