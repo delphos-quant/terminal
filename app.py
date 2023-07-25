@@ -1,176 +1,320 @@
-import dash
-from dash import dcc, html, dash_table
-from dash.dependencies import Input, Output, MATCH
-from dash.exceptions import PreventUpdate
+import sys
+import traceback
 
-from plotly import express
-
-import pandas
-import numpy
-from datetime import datetime, timedelta
-
-app = dash.Dash(__name__)
-
-
-def function_1(_):
-    return html.Div([
-        html.H3("Sopa de Macaco"),
-        html.Button("Volatilidade mensal"),
-        html.Button("Volatilidade Anual", id={'type': 'dynamic-button', 'index': 'vol-mensal'}, n_clicks=0),
-        html.Div(id={'type': 'dynamic-output', 'index': 'vol-mensal'})
-    ])
-
-
-def function_2(value):
-    return value ** 3
-
-
-def function_3(value):
-    return value ** (value ** value)
-
-
-def function_4(_):
-    return dash_table.DataTable(
-        id='table',
-        columns=[
-            {"name": "Stock", "id": "Stock"},
-            {"name": "PriceNow", "id": "PriceNow"},
-            {"name": "AveragePriceYesterday", "id": "AveragePriceYesterday"},
-            {"name": "AveragePriceBeforeYesterday", "id": "AveragePriceBeforeYesterday"},
-        ],
-        data=[
-            {"Stock": "GOOG", "PriceNow": "1500", "AveragePriceYesterday": "1490",
-             "AveragePriceBeforeYesterday": "1485"},
-            {"Stock": "AAPL", "PriceNow": "200", "AveragePriceYesterday": "195", "AveragePriceBeforeYesterday": "190"},
-            {"Stock": "AMZN", "PriceNow": "3100", "AveragePriceYesterday": "3080",
-             "AveragePriceBeforeYesterday": "3060"},
-            {"Stock": "MSFT", "PriceNow": "250", "AveragePriceYesterday": "245", "AveragePriceBeforeYesterday": "240"},
-        ],
-        style_cell_conditional=[
-            {'if': {'column_id': 'Stock'},
-             'textAlign': 'center'},
-            {'if': {'column_id': 'PriceNow'},
-             'textAlign': 'center'},
-            {'if': {'column_id': 'AveragePriceYesterday'},
-             'textAlign': 'center'},
-            {'if': {'column_id': 'AveragePriceBeforeYesterday'},
-             'textAlign': 'center'}
-        ]
-    )
-
-
-@app.callback(
-    Output({'type': 'dynamic-graph', 'index': "generated-graph"}, 'children'),
-    [Input({'type': 'dynamic-k', 'index': "k-field"}, 'value')]
+import pandas as pd
+from PyQt6 import QtWidgets, QtWebEngineWidgets
+from PyQt6.QtGui import QColor
+from PyQt6.QtWidgets import (
+    QApplication, QMainWindow, QTableWidget, QVBoxLayout, QWidget, QPushButton, QTableWidgetItem, QMessageBox,
+    QLineEdit, QHBoxLayout, QTextEdit
 )
-def graph(k):
-    if not k or k < 1:
-        return
-    df = pandas.DataFrame(
-        {
-            "GOOG": numpy.random.rand(k) * 100,
-            "AAPL": numpy.random.rand(k) * 2000,
-            "AMZN": numpy.random.rand(k) * 200,
-            "MSFT": numpy.random.rand(k) * 10,
+from plotly import express as px
+
+
+class QTextEditStream:
+    def __init__(self, text_edit, color):
+        self.text_edit = text_edit
+        self.color = color
+
+    def write(self, text):
+        self.text_edit.setTextColor(self.color)
+        self.text_edit.insertPlainText(text)
+        self.text_edit.setTextColor(QColor("black"))
+
+
+# noinspection PyUnresolvedReferences
+class TableWidget1(QTableWidget):
+    def __init__(self):
+        super().__init__()
+        self.hide()
+        self.itemChanged.connect(self.item_changed)
+        self.data = None
+
+    def display_table(self, data):
+        self.data = data
+        self.setRowCount(data.shape[0])
+        self.setColumnCount(data.shape[1])
+
+        for i in range(data.shape[0]):
+            for j in range(data.shape[1]):
+                item = str(data.iloc[i, j])
+                self.setItem(i, j, QTableWidgetItem(item))
+
+        self.show()
+
+    def item_changed(self, _):
+        print("Table 1 Data:")
+        for i in range(self.rowCount()):
+            row_data = [self.item(i, j).text() for j in range(self.columnCount()) if self.item(i, j)]
+            print(", ".join(row_data))
+
+
+# noinspection PyUnresolvedReferences
+class TableWidget2(QTableWidget):
+    def __init__(self):
+        super().__init__()
+        self.hide()
+        self.itemChanged.connect(self.item_changed)
+        self.data = None
+
+    def display_table(self, data):
+        self.data = data
+        self.setRowCount(data.shape[0])
+        self.setColumnCount(data.shape[1])
+
+        for i in range(data.shape[0]):
+            for j in range(data.shape[1]):
+                item = str(data.iloc[i, j])
+                self.setItem(i, j, QTableWidgetItem(item))
+
+        self.show()
+
+    def item_changed(self, _):
+        if not self.data.empty:
+            dxlib.data.append_to_csv(self.data)
+
+        print("Table 2 Data:")
+        for i in range(self.rowCount()):
+            row_data = [self.item(i, j).text() for j in range(self.columnCount()) if self.item(i, j)]
+            print(", ".join(row_data))
+
+
+class TableDisplay(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("dxlib - Terminal")
+
+        self.central_widget = QWidget()
+        self.setCentralWidget(self.central_widget)
+
+        self.layout = QVBoxLayout(self.central_widget)
+
+        self.namespace = {}
+
+        data_dict = {
+            "Name": ["AAPL", "GOOGL", "PETR4.SA", "ABEV3.SAO", "ITUB4.SAO", "VIX.US", "VIXX.US", "NYSE: GOLD"],
+            "Details": ["load", "load", "load", "load", "load", "load", "load", "load"]
         }
-    )
 
-    df.index = [datetime.now() - timedelta(days=x) for x in range(k, 0, -1)]
-    df.index.name = 'Date'
+        self.data = pd.DataFrame(data_dict)
+        self.top_results = []
 
-    df = df / df.iloc[0] * 100
+        self.data_window = QWidget(self)
 
-    fig = express.line(df.astype(float), x=df.index, y=df.columns)
+        self.search_bar = QLineEdit(self)
+        self.search_bar.textChanged.connect(self.update_results)
+        self.layout.addWidget(self.search_bar)
 
-    fig.update_layout(
-        title="Stock Price Comparison",
-        xaxis_title="Time",
-        yaxis_title="Price",
-    )
+        self.result_table = QTableWidget(self)
+        self.result_table.setColumnCount(2)
+        self.result_table.setHorizontalHeaderLabels(["Name", "Details"])
+        self.layout.addWidget(self.result_table)
 
-    return dcc.Graph(figure=fig)
+        self.console_layout = QHBoxLayout()
+        self.layout.addLayout(self.console_layout)
+
+        self.console_input = QLineEdit(self)
+        self.console_layout.addWidget(self.console_input)
+
+        self.console_input.returnPressed.connect(self.run_console_code)
+
+        self.run_button = QPushButton("Run", self)
+        self.run_button.clicked.connect(self.run_console_code)
+        self.console_layout.addWidget(self.run_button)
+
+        self.console_text_edit = QTextEdit(self)
+        self.layout.addWidget(self.console_text_edit)
+
+        self.button1 = QPushButton("Show Table 1")
+        self.button2 = QPushButton("Show Table 2")
+
+        # noinspection PyUnresolvedReferences
+        self.button1.clicked.connect(self.show_table1)
+        # noinspection PyUnresolvedReferences
+        self.button2.clicked.connect(self.show_table2)
+
+        self.layout.addWidget(self.button1)
+        self.layout.addWidget(self.button2)
+
+        self.table1_data = pd.DataFrame()
+        self.table2_data = pd.DataFrame()
+
+        self.table_widget1 = TableWidget1()
+        self.table_widget2 = TableWidget2()
+
+        self.layout.addWidget(self.table_widget1)
+        self.layout.addWidget(self.table_widget2)
+
+        self.plotly_button = QPushButton("Show Plotly Graph")
+        # noinspection PyUnresolvedReferences
+        self.plotly_button.clicked.connect(self.show_plotly_graph)
+        self.layout.addWidget(self.plotly_button)
+        self.plot = Widget(self)
+        self.plot.hide()
+
+        self.close_button = QPushButton("Close Application")
+        # noinspection PyUnresolvedReferences
+        self.close_button.clicked.connect(self.close_application)
+        self.layout.addWidget(self.close_button)
+
+    def show_plotly_graph(self):
+        self.plot.show()
+        self.table_widget1.hide()
+        self.table_widget2.hide()
+
+    def show_table1(self):
+        data = {
+            "Column A": [1, 2, 3],
+            "Column B": [4, 5, 6],
+        }
+        self.table1_data = pd.DataFrame(data)
+
+        self.table_widget1.display_table(self.table1_data)
+
+        self.table_widget2.hide()
+        self.plot.hide()
+
+    def show_table2(self):
+        data = {
+            "Column X": ["A", "B", "C"],
+            "Column Y": ["D", "E", "F"],
+        }
+        self.table2_data = pd.DataFrame(data)
+
+        self.table_widget2.display_table(self.table2_data)
+
+        self.table_widget1.hide()
+        self.plot.hide()
+
+    def update_results(self, text):
+        search_text = text.lower()
+        filtered_data = self.data[self.data["Name"].str.lower().str.startswith(search_text)]
+        self.top_results = filtered_data.head(5)
+
+        self.result_table.setRowCount(0)
+
+        for index, row in self.top_results.iterrows():
+            self.result_table.insertRow(self.result_table.rowCount())
+            self.result_table.setItem(self.result_table.rowCount() - 1, 0, QTableWidgetItem(row["Name"]))
+            self.result_table.setItem(self.result_table.rowCount() - 1, 1, QTableWidgetItem(row["Details"]))
+
+    def run_console_code(self):
+        code = self.console_input.text()
+        try:
+            self.append_console_output(f">>> {code}\n", is_input=True, color=QColor("gray"))
+
+            from io import StringIO
+            output_buffer = StringIO()
+
+            stdout = sys.stdout
+            sys.stdout = output_buffer
+            exec(code, self.namespace)
+            sys.stdout = stdout
+
+            output_buffer.seek(0)
+            output = output_buffer.getvalue()
+
+            if output:
+                self.append_console_output(f"\nOutput:\n", is_input=False, color=QColor("green"))
+                self.console_text_edit.insertPlainText(output)
+
+        except Exception as e:
+            error_traceback = traceback.format_exc()
+            self.append_console_output(f"Error: {e}\n{error_traceback}", is_input=False, color=QColor("red"))
+
+    def append_console_output(self, output, is_input=False, color=QColor("black")):
+        self.console_input.clear()
+        self.console_input.setFocus()
+        self.console_input.setPlaceholderText("Enter Python code here...")
+        self.console_input.setToolTip("Press 'Run' button or hit Enter to execute.")
+
+        self.console_text_edit.setTextColor(color)
+        self.console_text_edit.insertPlainText(output)
+        self.console_text_edit.setTextColor(QColor("white"))
+
+    def close_application(self):
+        reply = QMessageBox.question(self, "Confirmation", "Are you sure you want to close the application?",
+                                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+
+        if reply == QMessageBox.StandardButton.Yes:
+            QApplication.quit()
 
 
-def function_5(_):
-    return html.Div(
-        children=[
-            dcc.Input(
-                id={'type': 'dynamic-k', 'index': "k-field"},
-                placeholder="Insert a value for K",
-                style={"width": "300px"},
-                type="number",
-                value=40,
-            ),
-            html.Div(id={'type': 'dynamic-graph', 'index': "generated-graph"})
-        ]
-    )
+class Widget(QtWidgets.QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.button = QtWidgets.QPushButton('Plot', self)
+        self.browser = QtWebEngineWidgets.QWebEngineView(self)
 
+        vlayout = QtWidgets.QVBoxLayout(self)
+        vlayout.addWidget(self.button)
+        vlayout.addWidget(self.browser)
 
-function_map = {
-    "function_1": function_1,
-    "function_2": function_2,
-    "function_3": function_3,
-    "function_4": function_4,
-    "function_5": function_5,
-}
+        # noinspection PyUnresolvedReferences
+        self.button.clicked.connect(self.show_graph)
+        self.resize(1000, 800)
 
-buttons = [
-    {"label": "Acoes Petrobras", "id": "function_1"},
-    {"label": "Acoes Petrobras Iradas", "id": "function_2"},
-    {"label": "Acoes", "id": "function_3"},
-    {"label": "Acoes Tab", "id": "function_4"},
-    {"label": "Acoes Graphic", "id": "function_5"},
-]
-
-app.layout = html.Div(
-    [
-        html.H1("Search App"),
-        dcc.Input(
-            id="search-bar",
-            placeholder="Enter search term",
-            style={"width": "300px"},
-        ),
-        html.H3("Search Results"),
-        html.Div(id="search-results"),
-        html.P(id="sub-menu"),
-    ]
-)
-
-
-@app.callback(
-    Output("search-results", "children"),
-    [Input("search-bar", "value")]
-)
-def update_search_results(search_term):
-    if not search_term:
-        return html.P(f"Search Term: {search_term}")
-
-    filtered_options = [option for option in buttons if
-                        all(word.lower() in option["label"].lower() for word in search_term.split())]
-
-    return html.Div(
-        [
-            html.P(f"Search Term: {search_term}"),
-            html.Div([html.Button(button['label'], id={'type': 'dynamic-button', 'index': button['id']}, n_clicks=0) for
-                      button in filtered_options]),
-            html.Div([html.Div(id={'type': 'dynamic-output', 'index': button['id']}) for button in filtered_options])
-        ]
-    )
-
-
-@app.callback(
-    Output({'type': 'dynamic-output', 'index': MATCH}, 'children'),
-    Input({'type': 'dynamic-button', 'index': MATCH}, 'n_clicks'),
-)
-def update_output(n_clicks):
-    if n_clicks is None or n_clicks <= 0:
-        raise PreventUpdate
-    else:
-        button_id = dash.callback_context.triggered[0]['prop_id'].split('.')[0]
-        button_id = eval(button_id)['index']
-        function_to_execute = function_map[button_id]
-        return function_to_execute(n_clicks)
+    def show_graph(self):
+        df = px.data.tips()
+        fig = px.box(df, x="day", y="total_bill", color="smoker")
+        fig.update_traces(quartilemethod="exclusive")  # or "inclusive", or "linear" by default
+        self.browser.setHtml(fig.to_html(include_plotlyjs='cdn'))
 
 
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app = QApplication(sys.argv)
+
+    style = """
+        QWidget {
+            background-color: #181818;
+            color: white;
+            font-size: 14px;
+            font-family: Arial;
+        }
+
+        QLineEdit {
+            background-color: #2c2c2c;
+            color: white;
+            border: 1px solid #303030;
+            border-radius: 10px;
+            padding: 5px;
+        }
+
+        QLineEdit:focus {
+            background-color: #4d4d4d;
+        }
+
+        QTableWidget {
+            background-color: #2c2c2c;
+            color: white;
+            border: 1px solid #303030;
+            border-radius: 10px;
+            padding: 5px;
+        }
+
+        QTableWidget::item {
+            padding: 5px;
+        }
+
+        QTextEdit {
+            background-color: #2c2c2c;
+            color: white;
+            border: 1px solid #303030;
+            border-radius: 10px;
+            padding: 5px;
+        }
+
+        QPushButton {
+            background-color: #00CED1;
+            color: black;
+            border: 1px solid #00CED1;
+            border-radius: 10px;
+            padding: 5px;
+        }
+        """
+
+    app.setStyleSheet(style)
+
+    window = TableDisplay()
+    window.show()
+    sys.exit(app.exec())
