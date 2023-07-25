@@ -1,12 +1,10 @@
 import sys
 
-from PyQt6.QtWidgets import (
-    QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QMessageBox, QHBoxLayout, QGridLayout,
-)
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QMessageBox, QGridLayout
 
-from console.console_widget import ConsoleWidget
-from console.search_widget import SearchWidget
-from dashboard.plotly_widget import PlotlyWidget
+from .console.console_widget import ConsoleWidget
+from .console.search_widget import SearchWidget
+from .dashboard.plotly_widget import PlotlyWidget
 
 
 class TableDisplay(QMainWindow):
@@ -43,7 +41,7 @@ class TableDisplay(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
-    with open('style/app.qss', 'r') as file:
+    with open('terminal/style/app.qss', 'r') as file:
         style = file.read()
 
     app.setStyleSheet(style)

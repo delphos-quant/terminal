@@ -2,9 +2,12 @@ import sys
 import traceback
 from io import StringIO
 
-import pandas, numpy, dxlib
+import dxlib
+import numpy
+import pandas
 
-from console.handlers import GraphHandler, DataHandler, ProcessHandler
+
+from .handlers import GraphHandler, DataHandler, ProcessHandler
 
 
 class Interpreter:

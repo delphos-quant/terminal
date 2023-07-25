@@ -1,5 +1,5 @@
-# delphos-terminal
-## Financial Data Research and Simulation Terminal
+# dxlib-terminal
+## Interactive Terminal for Financial Data Research and Simulation
 This interactive terminal and dashboard application is designed to provide a comprehensive platform for analyzing and simulating financial data. Whether you're a researcher, investor, or financial professional, this tool empowers you to explore and gain insights into various financial scenarios.
 
 ### Features
@@ -31,14 +31,12 @@ This interactive terminal and dashboard application is designed to provide a com
 
 **Instructions for running the container:**
 1. Clone this repository:\
-``git clone https://github.com/delphos-quant/terminal.git`` \
-``cd terminal``
+``git clone https://github.com/delphos-quant/terminal.git``
 
-2. Run the Docker Compose:\
-``docker-compose up --build``
-3. ow, your Dash app should be accessible at http://localhost:8050 from your web browser. 
-Redis will also be running in another container and can be accessed via redis:6379.
-
+2. Install the dependencies:\
+``pip install -r terminal/requirements.txt``
+3. Now, to start the GUI, simply run:\
+``python -m terminal``
 
 ### Contributions and Feedback
 Contributions, bug reports, and feature requests are welcome! If you encounter any issues or have suggestions for improvements, please feel free to open an issue or submit a pull request on the GitHub repository.

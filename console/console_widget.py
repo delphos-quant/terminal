@@ -4,7 +4,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QKeyEvent
 from PyQt6.QtWidgets import QWidget, QTextEdit, QPushButton, QVBoxLayout
 
-from console.interpreter import Interpreter
+from .interpreter import Interpreter
 
 
 class QTextEditStream:
@@ -22,7 +22,7 @@ class ConsoleWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.layout = QVBoxLayout(self)
-        with open('style/app.qss', 'r') as file:
+        with open('terminal/style/app.qss', 'r') as file:
             style = file.read()
 
         self.setStyleSheet(style)
