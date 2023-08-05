@@ -22,7 +22,7 @@ class ConsoleWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.layout = QVBoxLayout(self)
-        with open('terminal/style/app.qss', 'r') as file:
+        with open('style/app.qss', 'r') as file:
             style = file.read()
 
         self.setStyleSheet(style)
@@ -35,6 +35,8 @@ class ConsoleWidget(QWidget):
         self.console_text_edit.setAcceptRichText(False)
         self.min_height = 75
         self.max_height = 150
+
+        # noinspection PyUnresolvedReferences
         self.console_text_edit.document().documentLayout().documentSizeChanged.connect(self.update_text_edit_height)
 
         self.layout.addWidget(self.console_text_edit)
@@ -92,8 +94,7 @@ class ConsoleWidget(QWidget):
             self.append_console_output(f">>> {code}\n", is_input=True, color=QColor("gray"))
             output = self.interpreter.run(code)
 
-            if output is not None:
-                self.append_console_output(f"\nOutput:\n{str(output)}", is_input=False, color=QColor("green"))
+            self.append_console_output(f"\nOutput:\n{str(output)}", is_input=False, color=QColor("green"))
 
         except Exception as e:
             error_traceback = traceback.format_exc()

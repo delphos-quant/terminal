@@ -1,10 +1,10 @@
 import sys
 
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QMessageBox, QGridLayout
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QMessageBox, QGridLayout, QPushButton
 
-from .console.console_widget import ConsoleWidget
-from .console.search_widget import SearchWidget
-from .dashboard.plotly_widget import PlotlyWidget
+from console.console_widget import ConsoleWidget
+from console.search_widget import SearchWidget
+from dashboard.plotly_widget import PlotlyWidget
 
 
 class TableDisplay(QMainWindow):
@@ -20,13 +20,18 @@ class TableDisplay(QMainWindow):
         self.console_widget = ConsoleWidget(self)
         self.search_widget = SearchWidget(self,
                                           search_bar=self.console_widget.get_console_field(),
-                                          data=self.console_widget.interpreter.get_reserved_commands())
+                                          data=self.console_widget.interpreter.get_descriptions())
         self.plotly_widget = PlotlyWidget(self)
         self.console_widget.interpreter.graph_element = self.plotly_widget
 
         self.layout.addWidget(self.console_widget, 0, 0)
         self.layout.addWidget(self.search_widget, 1, 0)
         self.layout.addWidget(self.plotly_widget, 0, 1)
+
+        self.close_button = QPushButton("Close", self)
+        # noinspection PyUnresolvedReferences
+        self.close_button.clicked.connect(self.close_application)
+        self.layout.addWidget(self.close_button, 1, 1)
 
         self.resize(1000, 700)
 
@@ -41,11 +46,11 @@ class TableDisplay(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
-    with open('terminal/style/app.qss', 'r') as file:
+    with open('style/app.qss', 'r') as file:
         style = file.read()
 
     app.setStyleSheet(style)
 
     window = TableDisplay()
-    window.show()
+    window.showNormal()
     sys.exit(app.exec())
